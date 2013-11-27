@@ -1,8 +1,11 @@
 import Markov
 
+import Control.Monad
 import System.Environment
 import System.Console.GetOpt
+import System.Directory
 import Data.Maybe (fromMaybe)
+import Data.Text hiding (foldl, map, concat)
 
 data Options = Options 
     { optSeed :: Maybe Int
@@ -28,11 +31,17 @@ options =
     , Option ['l'] ["length"] (OptArg (\f opts -> maybe opts (\f -> opts { optOutputLength = read f}) f) "LENGTH") "The length of the generated document"
     ]
 
+tokenise :: Text -> [Text]
+tokenise = splitOn (singleton ' ')
+
+getOptions :: [String] -> [OptDescr (Options -> Options)] -> Either String Options
+getOptions args opts =
+    case getOpt Permute options args  of
+        (actions, _, []) -> Right $ foldl (flip id) defaultOptions actions
+        (_,_,errors) -> Left $ "Could not parse comand line: \n" ++ concat errors
+
 main = do
     args <- getArgs
-    let (actions, nonOptions, errors) = getOpt Permute options args
-    case errors of
-        [] -> do  
-            let opts = foldl id defaultOptions actions
-            print opts 
-        _ -> do { putStrLn "Errors: " ; print errors }
+    let opts = case (getOptions args options) of Right os -> os; Left err -> error err
+    dirContents <- getDirectoryContents (optInputDirectory opts) >>= filterM doesFileExist
+    putStrLn $ show dirContents
