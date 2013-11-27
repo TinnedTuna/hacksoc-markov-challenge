@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe)
 
 data Options = Options 
     { optSeed :: Maybe Int
-    , optInputDirectory :: Maybe FilePath
+    , optInputDirectory :: FilePath
     , optOutputFile :: Maybe FilePath
     , optOutputLength :: Int
     }
@@ -15,22 +15,24 @@ data Options = Options
 defaultOptions :: Options
 defaultOptions = Options
     { optSeed = Nothing
-    , optInputDirectory = Just "./corpus/"
+    , optInputDirectory = "./corpus/"
     , optOutputFile = Nothing
     , optOutputLength = 1500
     }
 
 options :: [OptDescr (Options -> Options)]
 options = 
-    [ Option ['s'] ["seed"] (OptArg ((\f opts -> opts { optSeed = Just f}) . read . fromMaybe "seed") "SEED") "Seed for the RNG" 
-    , Option ['i'] ["inputDir"] (OptArg ((\f opts -> opts { optInputDirectory = Just f}) . fromMaybe "inputDir") "DIR") "Directory containing the corpus" 
-    , Option ['o'] ["outputFile"] (OptArg ((\f opts -> opts { optOutputFile = Just f}) . fromMaybe "outputFile") "FILE") "File to write the generated document to"
-    , Option ['l'] ["length"] (OptArg ((\f opts -> opts { optOutputLength = f}) . read .fromMaybe "length") "LENGTH") "The length of the generated document"
+    [ Option ['s'] ["seed"] (OptArg (\f opts -> maybe opts (\f -> opts { optSeed = read f}) f) "SEED") "Seed for the RNG" 
+    , Option ['i'] ["inputDir"] (OptArg (\f opts -> maybe opts (\f -> opts { optInputDirectory = f}) f) "DIR") "Directory containing the corpus" 
+    , Option ['o'] ["outputFile"] (OptArg (\f opts -> opts { optOutputFile = fmap read f}) "FILE") "File to write the generated document to"
+    , Option ['l'] ["length"] (OptArg (\f opts -> maybe opts (\f -> opts { optOutputLength = read f}) f) "LENGTH") "The length of the generated document"
     ]
 
 main = do
     args <- getArgs
-    let (actions, nonOptions, errors) = getOpt RequireOrder options args
-    opts <- foldl (>>=) (return defaultOptions) actions
-    print opts
-
+    let (actions, nonOptions, errors) = getOpt Permute options args
+    case errors of
+        [] -> do  
+            let opts = foldl id defaultOptions actions
+            print opts 
+        _ -> do { putStrLn "Errors: " ; print errors }
