@@ -5,15 +5,25 @@ Written for the 2013 HackSoc randomly-generated speeches competition, see:
 https://twitter.com/HackSoc/status/404302716106600448
 
 Status
-======
+------
 
 NON-FUNCTIONAL AT THIS TIME.
 
 The Markov chain generator is *written*, but it has not got a pretty driver,
 there's nothing that reads files, and the command line option parsing is shot.
 
+Building
+--------
+
+Building is handled by cabal:
+
+```
+$ cabal configure
+$ cabal build
+```
+
 Usage
-=====
+-----
 
 ```
 $ runhaskell Main.hs --seed=SEED --length=LENGTH --inputDir=DIR --outputFile=FILE
@@ -31,10 +41,10 @@ chosen:
   * outputFile = stdout 
 
 TODO
-====
+----
 
-  * Opening files in the given directory that are files
-  * Tokenising files into words
+  * Output to the requested location
+  * Logging of input parameters, e.g. seed & corpus files.
   * Parallel training of the chain
 
 
