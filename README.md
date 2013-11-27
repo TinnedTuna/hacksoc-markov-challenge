@@ -7,10 +7,8 @@ https://twitter.com/HackSoc/status/404302716106600448
 Status
 ------
 
-NON-FUNCTIONAL AT THIS TIME.
-
-The Markov chain generator is *written*, but it has not got a pretty driver,
-there's nothing that reads files, and the command line option parsing is shot.
+It's all written and working for small datasets (and reasonably quickly), 
+however, it has serious memory issues.
 
 Building
 --------
