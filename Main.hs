@@ -6,13 +6,20 @@ import Control.Monad.Random (evalRand)
 import System.Environment
 import System.Directory
 import System.Random
+import System.IO
 import Data.Maybe (fromMaybe)
-import Data.Text hiding (foldl, map, concat, take)
+import Data.Text hiding (foldl, map, concat, take, unwords)
 import Data.Text.Encoding as E 
 import Data.ByteString as B hiding (putStrLn, map, singleton, take, pack)
 
 tokenise :: Text -> [Text]
-tokenise = splitOn (singleton ' ') . replace (pack "\r\n") (singleton ' ') . replace  (singleton '"') (singleton ' ') . replace (pack "&&&") (singleton ' ')
+tokenise = splitOn (singleton ' ') 
+    . replace (pack "  ") (singleton ' ')
+    . replace (pack "\r\n") (singleton ' ') 
+    . replace (singleton '"') (singleton ' ') 
+    . replace (pack "&&&") (singleton ' ')
+    . replace (pack "***") (singleton ' ')
+    . replace (singleton '>') (singleton ' ')
 
 deTokenise :: [Text] -> Text
 deTokenise = Data.Text.intercalate $ singleton ' '
@@ -20,13 +27,23 @@ deTokenise = Data.Text.intercalate $ singleton ' '
 getGen :: Maybe Int -> StdGen -> StdGen
 getGen seed gen = maybe gen (mkStdGen) seed
 
+getOutput :: Maybe FilePath -> Handle -> (ByteString -> IO ()) 
+getOutput path handle = maybe (B.hPut handle) (B.writeFile) path
+
+writeHandle :: (ByteString -> IO ()) -> Text -> IO ()
+writeHandle h str = do
+    h $ E.encodeUtf8 str
+
 main = do
     args <- getArgs
     let opts = case (getOptions args) of Right os -> os; Left err -> error err
     dirContents <- getDirectoryContents (optInputDirectory opts)  >>= filterM doesFileExist . (map (optInputDirectory opts ++))
-    putStrLn $ show dirContents
     corpusByteStringFiles <- mapM (B.readFile) dirContents
     let chain = buildChainMultipleInput $ map (tokenise . E.decodeUtf8) corpusByteStringFiles
     defaultGenerator <- getStdGen
     generated <- return $ evalRand (runChain chain) (getGen (optSeed opts) defaultGenerator)
-    putStrLn . show $ deTokenise $ (take $ optOutputLength opts) generated
+    let outputHandle = getOutput (optOutputFile opts) stdout
+    let logHandle = getOutput (optLogFile opts) stdout
+    writeHandle logHandle (pack ("Using corpus: " ++ (unwords (map show dirContents)) ++ "\n"))
+    writeHandle logHandle (pack ("Seed: " ++ maybe "default" (show) (optSeed opts) ++ "\n"))
+    writeHandle outputHandle $ deTokenise $ (take $ optOutputLength opts) generated
