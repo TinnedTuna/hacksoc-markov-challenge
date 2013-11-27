@@ -26,11 +26,12 @@ Usage
 -----
 
 ```
-$ runhaskell Main.hs --seed=SEED --length=LENGTH --inputDir=DIR --outputFile=FILE
+$ runhaskell Main.hs --seed=SEED --length=LENGTH --inputDir=DIR --outputFile=OUTFILE --logFile=LOGFILE
 ```
 
 This will generate a random set of text based on the SEED and files found in
-DIR, of length LENGTH and written into FILE.
+DIR, of length LENGTH and written into OUTFILE. Logging of the seed, corpus 
+files used will be written into LOGFILE
 
 All arguments are optional, and if omitted, a reasonably sane default will be 
 chosen:
@@ -39,13 +40,10 @@ chosen:
   * length = 1500
   * inputDir = ./corpus
   * outputFile = stdout 
+  * logFile = stdout
 
 TODO
 ----
 
-  * Output to the requested location
-  * Logging of input parameters, e.g. seed & corpus files.
   * Parallel training of the chain
-
-
 
