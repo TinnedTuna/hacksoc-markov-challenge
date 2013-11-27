@@ -32,7 +32,7 @@ defaultOptions = Options
 
 options :: [OptDescr (Options -> Options)]
 options = 
-    [ Option ['s'] ["seed"] (OptArg (\f opts -> maybe opts (\f -> opts { optSeed = read f}) f) "SEED") "Seed for the RNG" 
+    [ Option ['s'] ["seed"] (OptArg (\f opts -> maybe opts (\f -> opts { optSeed = Just (read f)}) f) "SEED") "Seed for the RNG" 
     , Option ['i'] ["inputDir"] (OptArg (\f opts -> maybe opts (\f -> opts { optInputDirectory = f}) f) "DIR") "Directory containing the corpus" 
     , Option ['o'] ["outputFile"] (OptArg (\f opts -> opts { optOutputFile = fmap read f}) "FILE") "File to write the generated document to"
     , Option ['l'] ["length"] (OptArg (\f opts -> maybe opts (\f -> opts { optOutputLength = read f}) f) "LENGTH") "The length of the generated document"

@@ -9,10 +9,10 @@ import System.Random
 import Data.Maybe (fromMaybe)
 import Data.Text hiding (foldl, map, concat, take)
 import Data.Text.Encoding as E 
-import Data.ByteString as B hiding (putStrLn, map, singleton, take)
+import Data.ByteString as B hiding (putStrLn, map, singleton, take, pack)
 
 tokenise :: Text -> [Text]
-tokenise = splitOn (singleton ' ')
+tokenise = splitOn (singleton ' ') . replace (pack "\r\n") (singleton ' ') . replace  (singleton '"') (singleton ' ') . replace (pack "&&&") (singleton ' ')
 
 deTokenise :: [Text] -> Text
 deTokenise = Data.Text.intercalate $ singleton ' '
@@ -28,6 +28,5 @@ main = do
     corpusByteStringFiles <- mapM (B.readFile) dirContents
     let chain = buildChainMultipleInput $ map (tokenise . E.decodeUtf8) corpusByteStringFiles
     defaultGenerator <- getStdGen
-    print chain
     generated <- return $ evalRand (runChain chain) (getGen (optSeed opts) defaultGenerator)
     putStrLn . show $ deTokenise $ (take $ optOutputLength opts) generated
