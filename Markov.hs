@@ -5,17 +5,22 @@ module Markov (
     buildChainMultipleInput
     ) where
 
-import Data.Map as Map hiding (foldr, map)
+
 import Control.Monad.Random
+import Control.DeepSeq
+import Data.Map as Map hiding (foldr, map)
 
 type Chain a = Map a [a] 
 
-buildChainMultipleInput :: (Ord a) => [[a]] -> Chain a
+buildChainMultipleInput :: (NFData a, Ord a) => [[a]] -> Chain a
 buildChainMultipleInput trainingData = foldr (Map.unionWith (++)) Map.empty $ map buildChain trainingData
 
-buildChain :: (Ord a) => [a] -> Chain a
-buildChain [a, b] = insert a [b] $ Map.singleton b []
-buildChain (first:xs) = Map.insertWith (++) first [head xs] $ buildChain xs
+buildChain :: (NFData a, Ord a) => [a] -> Chain a
+buildChain xs = force $ buildChain' xs Map.empty
+    where 
+    buildChain' :: (Ord a) => [a] -> Chain a -> Chain a
+    buildChain' [a, b] c = insert a [b] $ c
+    buildChain' (first:xs) c = buildChain' xs $ Map.insertWith (++) first [head xs] c
 
 runChain :: (RandomGen g, Ord a) => Chain a -> Rand g [a]
 runChain chn = do
