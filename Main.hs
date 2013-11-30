@@ -9,11 +9,21 @@ import System.Directory
 import System.Random
 import System.IO
 import Data.Maybe (fromMaybe)
-import Data.Text hiding (foldl, map, concat, take, unwords)
+import Data.Text hiding (foldl, map, concat, take, unwords, length)
 import Data.Text.Encoding as E 
 import Data.Text.IO as TIO
-import Data.ByteString as B hiding (putStrLn, map, singleton, take, pack, copy)
+import Data.ByteString as B hiding (putStrLn, map, singleton, take, pack, length)
+import Data.Char
+import Data.Map as M (keys)
 
+space = fromIntegral . ord $ ' '
+
+{-
+tokenise :: ByteString -> [Text]
+tokenise = 
+    map (E.decodeUtf8 . copy)
+    . B.split space 
+-}
 tokenise :: Text -> [Text]
 tokenise = 
     splitOn (singleton ' ') 
@@ -44,7 +54,8 @@ main = do
     corpusFiles <- mapM (TIO.readFile) dirContents
     let chain = force $ buildChainMultipleInput . map (tokenise) $ corpusFiles
     let logHandle = getOutput (optLogFile opts) stdout
-    writeHandle logHandle (pack ("Got the chain built."))
+    writeHandle logHandle (pack ("Got the chain built.\n"))
+    writeHandle logHandle (pack ("We have " ++ show (length (M.keys chain)) ++ " keys\n"))
     defaultGenerator <- getStdGen
     generated <- return $ evalRand (runChain chain) (getGen (optSeed opts) defaultGenerator)
     let outputHandle = getOutput (optOutputFile opts) stdout
