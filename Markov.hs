@@ -2,18 +2,25 @@ module Markov (
     Chain,
     buildChain,
     runChain,
-    buildChainMultipleInput
+    buildChainMultipleInput,
+    buildChainPar
     ) where
 
 
 import Control.Monad.Random
 import Control.DeepSeq
+import Control.Parallel
+import Control.Parallel.Strategies
 import Data.Map as Map hiding (foldr, map)
 
 type Chain a = Map a [a] 
 
 buildChainMultipleInput :: (NFData a, Ord a) => [[a]] -> Chain a
 buildChainMultipleInput trainingData = foldr (Map.unionWith (++)) Map.empty $ map buildChain trainingData
+
+buildChainPar :: (NFData a, Ord a) => [[a]] -> Chain a
+buildChainPar trainingData = force $ foldr (Map.unionWith (++)) Map.empty $ runEval $ do
+    return $ parMap (rpar) (force . buildChain) trainingData
 
 buildChain :: (NFData a, Ord a) => [a] -> Chain a
 buildChain xs = force $ buildChain' xs Map.empty

@@ -52,7 +52,7 @@ main = do
     let opts = case (getOptions args) of Right os -> os; Left err -> error err
     dirContents <- getDirectoryContents (optInputDirectory opts)  >>= filterM doesFileExist . (map (optInputDirectory opts ++))
     corpusFiles <- mapM (TIO.readFile) dirContents
-    let chain = force $ buildChainMultipleInput . map (tokenise) $ corpusFiles
+    let chain = buildChainPar . map (tokenise) $ corpusFiles
     let logHandle = getOutput (optLogFile opts) stdout
     writeHandle logHandle (pack ("Got the chain built.\n"))
     writeHandle logHandle (pack ("We have " ++ show (length (M.keys chain)) ++ " keys\n"))
