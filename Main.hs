@@ -8,6 +8,10 @@ import System.Environment
 import System.Directory
 import System.Random
 import System.IO
+import System.Log.Logger
+import System.Log.Handler.Simple
+import System.Log.Handler (setFormatter)
+import System.Log.Formatter
 import Data.Maybe (fromMaybe)
 import Data.Text hiding (foldl, map, concat, take, unwords, length)
 import Data.Text.Encoding as E 
@@ -47,18 +51,26 @@ writeHandle :: (ByteString -> IO ()) -> Text -> IO ()
 writeHandle h str = do
     h $ E.encodeUtf8 str
 
+getLoggerFromMaybe :: Maybe FilePath -> IO (GenericHandler Handle)
+getLoggerFromMaybe path = case path of
+    Just fp -> fileHandler fp INFO
+    Nothing -> streamHandler stdin INFO
+
 main = do
     args <- getArgs
     let opts = case (getOptions args) of Right os -> os; Left err -> error err
     dirContents <- getDirectoryContents (optInputDirectory opts)  >>= filterM doesFileExist . (map (optInputDirectory opts ++))
     corpusFiles <- mapM (TIO.readFile) dirContents
     let chain = buildChainPar . map (tokenise) $ corpusFiles
-    let logHandle = getOutput (optLogFile opts) stdout
-    writeHandle logHandle (pack ("Got the chain built.\n"))
-    writeHandle logHandle (pack ("We have " ++ show (length (M.keys chain)) ++ " keys\n"))
+    logHandle <- getLoggerFromMaybe (optLogFile opts)
+    return $ setFormatter logHandle (simpleLogFormatter "[$time : $loggername : $prio] $msg")
+    updateGlobalLogger "MarkovGenerator.Main" (addHandler logHandle)
+    debugM "MarkovGenerator.Main" "Got the chain built."
+    infoM "MarkovGenerator.Main" $ "We have " ++ show (length (M.keys chain)) ++ " keys"
     defaultGenerator <- getStdGen
     generated <- return $ evalRand (runChain chain) (getGen (optSeed opts) defaultGenerator)
     let outputHandle = getOutput (optOutputFile opts) stdout
-    writeHandle logHandle (pack ("Using corpus: " ++ (unwords (map show dirContents)) ++ "\n"))
-    writeHandle logHandle (pack ("Seed: " ++ maybe "default" (show) (optSeed opts) ++ "\n"))
+    infoM "MarkovGenerator.Main" $ "Using corpus: " ++ (unwords (map show dirContents))
+    infoM "MarkovGenerator.Main" $ "Seed: " ++ maybe "default" (show) (optSeed opts)
     writeHandle outputHandle $ deTokenise $ (take $ optOutputLength opts) generated
+    
