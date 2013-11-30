@@ -24,7 +24,7 @@ Usage
 -----
 
 ```
-$ runhaskell Main.hs --seed=SEED --length=LENGTH --inputDir=DIR --outputFile=OUTFILE --logFile=LOGFILE
+$ markov-generator --seed=SEED --length=LENGTH --inputDir=DIR --outputFile=OUTFILE --logFile=LOGFILE
 ```
 
 This will generate a random set of text based on the SEED and files found in
@@ -43,5 +43,5 @@ chosen:
 TODO
 ----
 
-  * Parallel training of the chain
-
+  * Generalise to n-gram analysis
+  * Reduce memory footprint (We currently require +RTS -K<BIG>M -RTS for large-ish corpus)

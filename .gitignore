@@ -1,3 +1,7 @@
 dist/*
 corpus/*
 .*.swp
+*.hp
+*.eventlog
+*.hi
+*.o
