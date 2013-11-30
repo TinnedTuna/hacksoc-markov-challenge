@@ -44,4 +44,3 @@ TODO
 ----
 
   * Generalise to n-gram analysis
-  * Reduce memory footprint (We currently require +RTS -K<BIG>M -RTS for large-ish corpus)
