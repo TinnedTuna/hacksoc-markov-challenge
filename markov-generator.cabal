@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                markov-generator
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            A simple random text generator based on a Markov generator
 -- description:         
 license:             BSD2
